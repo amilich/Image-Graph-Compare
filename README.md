@@ -1,1 +1,1 @@
-# Comparing images via conversion to undirected graphs
+# Comparing images via graphs
