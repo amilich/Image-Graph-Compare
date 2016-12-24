@@ -8,6 +8,7 @@ December 2016
 import struct
 import scipy.misc
 import numpy as np
+import math
 from sklearn.cluster import KMeans
 from PIL import Image
 
@@ -15,16 +16,11 @@ def arr_to_img(arr, filename, mode, size):
 	new_im = Image.new(mode, size)
 	new_im.putdata(arr)
 
-def img_to_arr(img): 
+def img_to_arr(im): 
 	return list(im.getdata())
 
-def get_neighbors(pt_index, pt_arr, width, height): 
-	neighbors = [] 
-	# TODO 
-	return neighbors 
-
 def hex_to_rgb(value):
-	value = str(value)
+	value = "%06x" % value
 	lv = len(value)
 	return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
 
@@ -42,24 +38,28 @@ def col_diff(rgb_1, rgb_2):
 def set_edge(pt_arr, edge_arr, cent_rgb, x, y, edge_threshold): 
 	for i in range(x - 1, x + 2): 
 		for j in range(y - 1, y + 2): 
+			if i >= pt_arr.shape[0] or j >= pt_arr.shape[1]:
+				continue
 			curr_rgb = hex_to_rgb(pt_arr[i, j])
 			if col_diff(cent_rgb, curr_rgb) > edge_threshold: 
 				edge_arr[x, y] = 0xffffff
 				return 
 	return
 
-def to_edges(pt_arr, edge_threshold = 50): 
-	edge_arr = np.array(pt_arr.shape)
+def to_edges(pt_arr, edge_threshold = 70): 
+	edge_arr = np.zeros(pt_arr.shape)
 
 	for (x, y), value in np.ndenumerate(pt_arr): 
 		cent_rgb = hex_to_rgb(pt_arr[x, y])
 		set_edge(pt_arr, edge_arr, cent_rgb, x, y, edge_threshold)
 
-	return 
+	return edge_arr
 
-if __name__ == '__main__':
-	im = Image.open('res/cat.jpg')
+def pt_dist(x1, y1, x2, y2): 
+	return math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2))
 
+def create_img_adj_mat(filename):
+	im = Image.open(filename)
 	pixel_arr = img_to_arr(im)
 	width, height = im.size
 	pixel_arr = [pixel_arr[i * width:(i + 1) * width] for i in xrange(height)]
@@ -70,10 +70,32 @@ if __name__ == '__main__':
 			rgb = pixel_arr[i][j]
 			hex_arr[i, j] = (rgb[0] << 16 & 0xff0000) + (rgb[1] << 8 & 0x00ff00) 
 			+ (rgb[2] & 0x0000ff) & 0xffffff	
+
+	print("Creating edges for {}".format(filename))
 	hex_arr = to_edges(hex_arr)
+	print("Clustering")
+	cluster_pts = []
+	for (x, y), value in np.ndenumerate(hex_arr): 
+		if value is not 0: 
+			cluster_pts.append((x, y))
 
-	kmeans = KMeans(n_clusters=2, random_state=0).fit(pixel_arr)
+	num_clusters = 10
+	kmeans = KMeans(n_clusters=num_clusters, random_state=0).fit(cluster_pts)
+	centers = kmeans.cluster_centers_
+	print(centers)
+	adj_mat = np.zeros((num_clusters, num_clusters))
+	for x in range(num_clusters): 
+		for y in range(num_clusters): 
+			adj_mat[x, y] = pt_dist(centers[x][0], centers[x][1], 
+									centers[y][0], centers[y][1])
+	return adj_mat
 
-	# scipy.misc.imshow(pixel_arr)
-	scipy.misc.imsave("res/new.png", pixel_arr)
+def euc_distance(mat1, mat2): 
+	return 0
+
+if __name__ == '__main__':
+	adj_mat_1 = create_img_adj_mat('res/cat.jpg')
+	adj_mat_2 = create_img_adj_mat('res/cat2.jpg')
+
+	# scipy.misc.imsave("res/new.png", hex_arr.tolist())
 
