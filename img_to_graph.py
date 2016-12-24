@@ -28,7 +28,18 @@ def hex_to_rgb(value):
 	lv = len(value)
 	return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
 
-def set_edge(pt_arr, edge_arr, cent_rgb, x, y): 
+def col_diff(rgb_1, rgb_2): 
+	r1 = rgb_1[0]
+	r2 = rgb_2[0]
+
+	g1 = rgb_1[1]
+	g2 = rgb_2[1]
+
+	b1 = rgb_1[2]
+	b2 = rgb_2[2]	
+	return max(abs(r1 - r2), max(abs(b1 - b2), abs(g1 - g2)))
+
+def set_edge(pt_arr, edge_arr, cent_rgb, x, y, edge_threshold): 
 	for i in range(x - 1, x + 2): 
 		for j in range(y - 1, y + 2): 
 			curr_rgb = hex_to_rgb(pt_arr[i, j])
@@ -42,7 +53,7 @@ def to_edges(pt_arr, edge_threshold = 50):
 
 	for (x, y), value in np.ndenumerate(pt_arr): 
 		cent_rgb = hex_to_rgb(pt_arr[x, y])
-		set_edge(pt_arr, edge_arr, cent_rgb, x, y)
+		set_edge(pt_arr, edge_arr, cent_rgb, x, y, edge_threshold)
 
 	return 
 
@@ -52,7 +63,7 @@ if __name__ == '__main__':
 	pixel_arr = img_to_arr(im)
 	width, height = im.size
 	pixel_arr = [pixel_arr[i * width:(i + 1) * width] for i in xrange(height)]
-	hex_arr = np.zeros((height, width)) # rows, cols
+	hex_arr = np.zeros((height, width), dtype=np.int64) # rows, cols
 
 	for i in range(len(pixel_arr)): 
 		for j in range(len(pixel_arr[i])): 
