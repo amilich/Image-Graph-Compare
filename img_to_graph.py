@@ -5,6 +5,7 @@ Andrew Milich
 December 2016 
 """
 
+import struct
 import scipy.misc
 import numpy as np
 from sklearn.cluster import KMeans
@@ -22,10 +23,27 @@ def get_neighbors(pt_index, pt_arr, width, height):
 	# TODO 
 	return neighbors 
 
+def hex_to_rgb(value):
+	value = str(value)
+	lv = len(value)
+	return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
+
+def set_edge(pt_arr, edge_arr, cent_rgb, x, y): 
+	for i in range(x - 1, x + 2): 
+		for j in range(y - 1, y + 2): 
+			curr_rgb = hex_to_rgb(pt_arr[i, j])
+			if col_diff(cent_rgb, curr_rgb) > edge_threshold: 
+				edge_arr[x, y] = 0xffffff
+				return 
+	return
+
 def to_edges(pt_arr, edge_threshold = 50): 
-	for tup in pt_arr: 
-		for pt in get_neighbors(tup): 
-			pass
+	edge_arr = np.array(pt_arr.shape)
+
+	for (x, y), value in np.ndenumerate(pt_arr): 
+		cent_rgb = hex_to_rgb(pt_arr[x, y])
+		set_edge(pt_arr, edge_arr, cent_rgb, x, y)
+
 	return 
 
 if __name__ == '__main__':
@@ -35,16 +53,13 @@ if __name__ == '__main__':
 	width, height = im.size
 	pixel_arr = [pixel_arr[i * width:(i + 1) * width] for i in xrange(height)]
 	hex_arr = np.zeros((height, width)) # rows, cols
-	
-	print hex_arr
-	print hex_arr.shape
 
-	for i in pixel_arr: 
-		print len(i)
-		for j in i: 
-			hex_arr[i, j] = (j[0] << 16 & 0xff0000) + (j[1] << 8 & 0x00ff00) 
-			+ (j[2] & 0x0000ff) & 0xffffff	
-	pixel_arr = to_edges(pixel_arr)
+	for i in range(len(pixel_arr)): 
+		for j in range(len(pixel_arr[i])): 
+			rgb = pixel_arr[i][j]
+			hex_arr[i, j] = (rgb[0] << 16 & 0xff0000) + (rgb[1] << 8 & 0x00ff00) 
+			+ (rgb[2] & 0x0000ff) & 0xffffff	
+	hex_arr = to_edges(hex_arr)
 
 	kmeans = KMeans(n_clusters=2, random_state=0).fit(pixel_arr)
 
