@@ -91,11 +91,13 @@ def create_img_adj_mat(filename):
 	return adj_mat
 
 def euc_distance(mat1, mat2): 
-	return 0
+	mat = (np.asmatrix((mat1 - mat2)) * np.asmatrix((mat1 - mat2)).H)
+	return math.sqrt(float(np.trace(mat)))
 
 if __name__ == '__main__':
 	adj_mat_1 = create_img_adj_mat('res/cat.jpg')
-	adj_mat_2 = create_img_adj_mat('res/cat2.jpg')
+	print euc_distance(adj_mat_1, adj_mat_1)
+	# adj_mat_2 = create_img_adj_mat('res/cat2.jpg')
 
-	# scipy.misc.imsave("res/new.png", hex_arr.tolist())
+	# scipy.misc.imsave("res/new.jpg", hex_arr.tolist())
 
