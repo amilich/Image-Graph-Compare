@@ -95,9 +95,12 @@ def euc_distance(mat1, mat2):
 	return math.sqrt(float(np.trace(mat)))
 
 if __name__ == '__main__':
-	adj_mat_1 = create_img_adj_mat('res/cat.jpg')
-	print euc_distance(adj_mat_1, adj_mat_1)
+	adj_mat_1 = create_img_adj_mat('res/k1.jpg')
+	adj_mat_2 = create_img_adj_mat('res/k2.jpg')
+	adj_mat_3 = create_img_adj_mat('res/t1.jpg')
+	print euc_distance(adj_mat_1, adj_mat_2)
+	print euc_distance(adj_mat_2, adj_mat_3)
+	print euc_distance(adj_mat_1, adj_mat_3)
 	# adj_mat_2 = create_img_adj_mat('res/cat2.jpg')
-
 	# scipy.misc.imsave("res/new.jpg", hex_arr.tolist())
 
